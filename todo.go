@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,7 +46,7 @@ func getTodo(context *gin.Context) {
 	todo, err := getTodoById(id)
 
 	if err != nil {
-		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "To do not found"})
+		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "Todo not found"})
 		return
 	}
 	context.IndentedJSON(http.StatusOK, todo)
@@ -58,8 +59,24 @@ func getTodoById(id string) (*todo, error) {
 			return &todos[i], nil
 		}
 	}
+	return nil, errors.New("todo not found")
+}
 
-	return nil, errors.New("todo not found!")
+// PATCH/UPDATE REQUEST
+func toggleToDoStatus(context *gin.Context) {
+	id := context.Param("id")
+
+	// Find the todo item by ID
+	for i, t := range todos {
+		if t.ID == id {
+			// Toggle the completed status
+			todos[i].Completed = !todos[i].Completed
+			context.IndentedJSON(http.StatusOK, todos[i])
+			return
+		}
+	}
+
+	context.IndentedJSON(http.StatusNotFound, gin.H{"message": "Todo not found"})
 }
 
 func main() {
@@ -67,5 +84,6 @@ func main() {
 	router.GET("/todos", getTodos)
 	router.GET("/todos/:id", getTodo)
 	router.POST("/todos", addTodo)
+	router.PATCH("/todos/:id", toggleToDoStatus) // Fixed to use correct handler
 	router.Run("localhost:9090")
 }
