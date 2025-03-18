@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -79,11 +78,29 @@ func toggleToDoStatus(context *gin.Context) {
 	context.IndentedJSON(http.StatusNotFound, gin.H{"message": "Todo not found"})
 }
 
+// DELETE REQUEST
+func deleteTodo(context *gin.Context) {
+	id := context.Param("id")
+
+	// Find and delete the todo item
+	for i, t := range todos {
+		if t.ID == id {
+			// Remove the item from the slice
+			todos = append(todos[:i], todos[i+1:]...)
+			context.IndentedJSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
+			return
+		}
+	}
+
+	context.IndentedJSON(http.StatusNotFound, gin.H{"message": "Todo not found"})
+}
+
 func main() {
 	router := gin.Default()
 	router.GET("/todos", getTodos)
 	router.GET("/todos/:id", getTodo)
 	router.POST("/todos", addTodo)
-	router.PATCH("/todos/:id", toggleToDoStatus) // Fixed to use correct handler
+	router.PATCH("/todos/:id", toggleToDoStatus)
+	router.DELETE("/todos/:id", deleteTodo) // DELETE endpoint added
 	router.Run("localhost:9090")
 }
